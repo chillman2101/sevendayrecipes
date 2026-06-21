@@ -13,13 +13,12 @@ export async function GET(request: Request) {
   }
 
   const tagsParam = searchParams.get("tags") ?? "";
-  const matchMode = (searchParams.get("matchMode") as "all" | "partial") ?? "partial";
   const tags = tagsParam.split(",").map((t) => t.trim()).filter(Boolean);
 
   if (tags.length === 0) {
     return NextResponse.json({ recipes: [] });
   }
 
-  const recipes = searchRecipesByTags(tags, matchMode, 0.5, 50);
+  const recipes = searchRecipesByTags(tags, 50);
   return NextResponse.json({ recipes });
 }

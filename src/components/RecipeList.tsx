@@ -6,13 +6,14 @@ import type { RecipeSummary } from "@/types";
 type Props = {
   recipes: RecipeSummary[];
   emptyMessage?: string;
+  groupByTag?: boolean;
 };
 
 export function RecipeList({ recipes, emptyMessage }: Props) {
   if (recipes.length === 0) {
     return (
       <div className="card text-center">
-        <p>{emptyMessage ?? "Tidak ada resep yang cocok. Coba kurangi tag atau ganti mode pencarian."}</p>
+        <p>{emptyMessage ?? "Tidak ada resep yang cocok. Coba bahan lain."}</p>
       </div>
     );
   }
@@ -29,8 +30,8 @@ export function RecipeList({ recipes, emptyMessage }: Props) {
           <p className="text-body-sm">
             {recipe.num_ingredients} bahan · {recipe.num_steps} langkah
           </p>
-          {recipe.matchScore !== undefined && (
-            <span className="tag mt-4">{recipe.matchScore}% bahan cocok</span>
+          {recipe.primaryPantryTag && (
+            <span className="tag mt-4">Pakai: {recipe.primaryPantryTag}</span>
           )}
         </Link>
       ))}

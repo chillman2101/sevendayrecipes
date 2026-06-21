@@ -12,14 +12,12 @@ export async function POST(request: Request) {
       days: body.days ?? 7,
       recipesPerDay: body.recipesPerDay ?? 2,
       ingredientTags: body.ingredientTags ?? [],
-      matchMode: body.matchMode ?? "all",
-      partialThreshold: body.partialThreshold ?? 0.5,
     };
 
     const slots = generatePlanSlots(config);
     if (slots.length === 0) {
       return NextResponse.json(
-        { error: "Tidak ada resep yang cocok dengan filter bahan. Coba kurangi tag." },
+        { error: "Tidak ada resep yang cocok dengan bahan dapur. Coba tambah atau ganti bahan." },
         { status: 400 }
       );
     }

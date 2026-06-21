@@ -12,14 +12,13 @@ export interface PlanConfig {
   days: 1 | 3 | 7;
   recipesPerDay: 1 | 2 | 3;
   ingredientTags?: string[];
-  matchMode?: "all" | "partial";
-  partialThreshold?: number;
 }
 
 export interface PlanSlot {
   day: number;
   slot: number;
   recipeId: string;
+  pantryTag?: string;
   locked?: boolean;
 }
 
@@ -35,5 +34,6 @@ export interface RecipeSummary {
   title: string;
   num_ingredients: number;
   num_steps: number;
-  matchScore?: number;
+  matchedPantryTags?: string[];
+  primaryPantryTag?: string;
 }

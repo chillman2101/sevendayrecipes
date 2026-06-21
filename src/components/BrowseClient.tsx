@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { IngredientTagInput } from "./IngredientTagInput";
 import { MobileSearchInput } from "./MobileSearchInput";
 import { RecipeList } from "./RecipeList";
@@ -23,7 +23,6 @@ export function BrowseClient({ popularTokens }: Props) {
   const [mode, setMode] = useState<SearchMode>("ingredients");
   const [tags, setTags] = useState<string[]>([]);
   const [nameQuery, setNameQuery] = useState("");
-  const [matchMode, setMatchMode] = useState<"all" | "partial">("partial");
   const [recipes, setRecipes] = useState<RecipeSummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -40,7 +39,7 @@ export function BrowseClient({ popularTokens }: Props) {
     const params =
       mode === "name"
         ? new URLSearchParams({ q: nameQuery.trim() })
-        : new URLSearchParams({ tags: tags.join(","), matchMode });
+        : new URLSearchParams({ tags: tags.join(",") });
 
     const res = await fetch(`/api/recipes/search?${params}`);
     const data = await res.json();
@@ -49,8 +48,29 @@ export function BrowseClient({ popularTokens }: Props) {
     setLoading(false);
   }
 
-  const canSearch =
-    mode === "name" ? nameQuery.trim().length >= 2 : tags.length > 0;
+  const canSearch = mode === "name" ? nameQuery.trim().length >= 2 : tags.length > 0;
+
+  const groupedByTag = useMemo(() => {
+    if (mode !== "ingredients" || tags.length === 0) return null;
+
+    const groups = new Map<string, RecipeSummary[]>();
+    for (const tag of tags) {
+      groups.set(tag, []);
+    }
+
+    for (const recipe of recipes) {
+      const tag = recipe.primaryPantryTag ?? recipe.matchedPantryTags?.[0];
+      if (tag && groups.has(tag)) {
+        groups.get(tag)!.push(recipe);
+      } else if (recipe.matchedPantryTags?.[0]) {
+        const t = recipe.matchedPantryTags[0];
+        if (!groups.has(t)) groups.set(t, []);
+        groups.get(t)!.push(recipe);
+      }
+    }
+
+    return [...groups.entries()].filter(([, items]) => items.length > 0);
+  }, [mode, tags, recipes]);
 
   return (
     <div className="space-y-8 md:space-y-10">
@@ -69,24 +89,12 @@ export function BrowseClient({ popularTokens }: Props) {
         style={{ paddingBottom: keyboardPadding > 0 ? keyboardPadding : undefined }}
       >
         {mode === "ingredients" ? (
-          <>
+          <div className="space-y-2">
+            <p className="text-sm text-ink-violet/80 md:text-body-sm">
+              Temukan berbagai masakan terpisah yang bisa dibuat dari bahan di dapur Anda.
+            </p>
             <IngredientTagInput popularTokens={popularTokens} selected={tags} onChange={setTags} />
-
-            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-4">
-              <label className="flex items-center gap-2 text-sm md:text-base">
-                <input type="radio" checked={matchMode === "all"} onChange={() => setMatchMode("all")} />
-                Semua bahan cocok
-              </label>
-              <label className="flex items-center gap-2 text-sm md:text-base">
-                <input
-                  type="radio"
-                  checked={matchMode === "partial"}
-                  onChange={() => setMatchMode("partial")}
-                />
-                Sebagian bahan cocok
-              </label>
-            </div>
-          </>
+          </div>
         ) : (
           <div className="space-y-2">
             <label htmlFor="recipe-name-search" className="text-sm font-bold md:text-base">
@@ -108,7 +116,27 @@ export function BrowseClient({ popularTokens }: Props) {
         </Button>
       </form>
 
-      {searched && <RecipeList recipes={recipes} emptyMessage={mode === "name" ? "Tidak ada resep dengan nama itu." : undefined} />}
+      {searched && groupedByTag && groupedByTag.length > 0 ? (
+        <div className="space-y-8">
+          {groupedByTag.map(([tag, items]) => (
+            <section key={tag} className="space-y-4">
+              <h2 className="text-xl font-bold md:text-subheading">Resep {tag}</h2>
+              <RecipeList recipes={items} groupByTag={false} />
+            </section>
+          ))}
+        </div>
+      ) : (
+        searched && (
+          <RecipeList
+            recipes={recipes}
+            emptyMessage={
+              mode === "name"
+                ? "Tidak ada resep dengan nama itu."
+                : "Tidak ada resep untuk bahan ini. Coba bahan lain."
+            }
+          />
+        )
+      )}
     </div>
   );
 }

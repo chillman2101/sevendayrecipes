@@ -20,7 +20,6 @@ export function GeneratorForm({ popularTokens }: Props) {
   const [days, setDays] = useState<1 | 3 | 7>(7);
   const [recipesPerDay, setRecipesPerDay] = useState<1 | 2 | 3>(2);
   const [tags, setTags] = useState<string[]>([]);
-  const [matchMode, setMatchMode] = useState<"all" | "partial">("all");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const keyboardPadding = useKeyboardPadding();
@@ -33,7 +32,7 @@ export function GeneratorForm({ popularTokens }: Props) {
     const res = await fetch("/api/plans", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ days, recipesPerDay, ingredientTags: tags, matchMode }),
+      body: JSON.stringify({ days, recipesPerDay, ingredientTags: tags }),
     });
 
     const data = await res.json();
@@ -65,7 +64,11 @@ export function GeneratorForm({ popularTokens }: Props) {
       </section>
 
       <section className="space-y-3 md:space-y-4">
-        <h2 className="text-xl font-bold md:text-subheading">Resep per hari</h2>
+        <h2 className="text-xl font-bold md:text-subheading">Masakan per hari</h2>
+        <p className="text-sm text-ink-violet/80 md:text-body-sm">
+          Tiap hari bisa beberapa lauk terpisah — misalnya ayam goreng + tempe goreng + tahu, bukan digabung
+          jadi satu resep.
+        </p>
         <div className="flex flex-wrap gap-2 sm:gap-3">
           {[1, 2, 3].map((n) => (
             <button
@@ -74,29 +77,19 @@ export function GeneratorForm({ popularTokens }: Props) {
               className={optionClass(recipesPerDay === n)}
               onClick={() => setRecipesPerDay(n as 1 | 2 | 3)}
             >
-              {n} resep
+              {n} masakan
             </button>
           ))}
         </div>
       </section>
 
       <section className="space-y-3 md:space-y-4">
-        <h2 className="text-xl font-bold md:text-subheading">Bahan yang tersedia (opsional)</h2>
-        <p className="text-sm md:text-body-sm">Filter resep berdasarkan bahan di dapur Anda.</p>
+        <h2 className="text-xl font-bold md:text-subheading">Bahan di dapur (opsional)</h2>
+        <p className="text-sm md:text-body-sm">
+          Menu dirakit dari bahan yang Anda punya. Setiap masakan memakai salah satu bahan — tidak harus
+          digabung dalam satu resep.
+        </p>
         <IngredientTagInput popularTokens={popularTokens} selected={tags} onChange={setTags} />
-
-        {tags.length > 0 && (
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-4">
-            <label className="flex items-center gap-2 text-sm md:text-base">
-              <input type="radio" checked={matchMode === "all"} onChange={() => setMatchMode("all")} />
-              Semua bahan harus cocok
-            </label>
-            <label className="flex items-center gap-2 text-sm md:text-base">
-              <input type="radio" checked={matchMode === "partial"} onChange={() => setMatchMode("partial")} />
-              Sebagian bahan cocok (≥50%)
-            </label>
-          </div>
-        )}
       </section>
 
       {error && <p className="text-sm text-red-700 md:text-base">{error}</p>}

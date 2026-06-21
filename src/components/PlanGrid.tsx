@@ -11,6 +11,12 @@ type Props = {
   recipes: Recipe[];
 };
 
+function formatDayMenu(titles: string[]): string {
+  if (titles.length === 0) return "";
+  if (titles.length === 1) return titles[0];
+  return titles.join(" · ");
+}
+
 export function PlanGrid({ plan, recipes }: Props) {
   const router = useRouter();
   const recipeMap = new Map(recipes.map((r) => [r.id, r]));
@@ -40,10 +46,16 @@ export function PlanGrid({ plan, recipes }: Props) {
 
   const grouped = Array.from({ length: plan.config.days }, (_, i) => {
     const day = i + 1;
+    const slots = plan.slots.filter((s) => s.day === day);
+    const titles = slots
+      .map((s) => recipeMap.get(s.recipeId)?.title)
+      .filter(Boolean) as string[];
+
     return {
       day,
       label: DAY_LABELS[i] ?? `Hari ${day}`,
-      slots: plan.slots.filter((s) => s.day === day),
+      slots,
+      menuSummary: formatDayMenu(titles),
     };
   });
 
@@ -55,18 +67,26 @@ export function PlanGrid({ plan, recipes }: Props) {
         </Button>
       </div>
 
-      {grouped.map(({ day, label, slots }) => (
+      {grouped.map(({ day, label, slots, menuSummary }) => (
         <section key={day} className="card space-y-4 md:space-y-6">
-          <h2 className="text-2xl font-bold md:text-heading-sm">
-            Hari {day} — {label}
-          </h2>
+          <div>
+            <h2 className="text-2xl font-bold md:text-heading-sm">
+              Hari {day} — {label}
+            </h2>
+            {menuSummary && (
+              <p className="mt-2 text-sm leading-relaxed text-ink-violet/90 md:text-base">{menuSummary}</p>
+            )}
+          </div>
           <div className="grid gap-4 md:grid-cols-2 md:gap-6 lg:grid-cols-3">
             {slots.map((slot) => {
               const recipe = recipeMap.get(slot.recipeId);
               if (!recipe) return null;
               return (
                 <article key={`${day}-${slot.slot}`} className="border border-ink-violet bg-cream-paper p-4 md:p-6">
-                  <p className="mb-2 text-xs font-bold uppercase md:text-sm">Resep {slot.slot}</p>
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                    <p className="text-xs font-bold uppercase md:text-sm">Lauk {slot.slot}</p>
+                    {slot.pantryTag && <span className="tag text-xs">Pakai: {slot.pantryTag}</span>}
+                  </div>
                   <h3 className="mb-3 text-lg font-bold leading-snug md:mb-4 md:text-xl">
                     <Link href={`/recipe/${recipe.id}`} className="hover:underline">
                       {recipe.title}

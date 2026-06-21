@@ -13,8 +13,8 @@ export default function BrowsePage() {
       <header className="mb-8 md:mb-12">
         <h1 className="text-2xl font-bold sm:text-3xl md:text-heading-sm">Cari resep</h1>
         <p className="mt-3 text-base leading-relaxed md:mt-4 md:text-body">
-          Cari dari nama menu atau dari bahan yang ada — dari koleksi {RECIPE_COUNT_LABEL} resep
-          masakan Indonesia.
+          Cari dari nama menu atau lihat masakan apa saja yang bisa dibuat dari bahan di dapur — dari
+          koleksi {RECIPE_COUNT_LABEL} resep masakan Indonesia.
         </p>
       </header>
       <BrowseClient popularTokens={popularTokens} />

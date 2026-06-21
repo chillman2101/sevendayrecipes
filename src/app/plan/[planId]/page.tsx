@@ -22,7 +22,10 @@ export default async function PlanPage({ params }: Props) {
         <h1 className="text-2xl font-bold sm:text-3xl md:text-heading-sm">Menu {plan.config.days} Hari</h1>
         <p className="mt-2 text-sm md:text-body-sm">{formatPlanDate(plan.createdAt)}</p>
         <p className="mt-1 text-sm md:text-body-sm">
-          {plan.config.recipesPerDay} resep/hari · {plan.slots.length} total resep
+          {plan.config.recipesPerDay} masakan/hari · {plan.slots.length} total masakan
+          {plan.config.ingredientTags && plan.config.ingredientTags.length > 0 && (
+            <> · bahan: {plan.config.ingredientTags.join(", ")}</>
+          )}
         </p>
       </header>
 
