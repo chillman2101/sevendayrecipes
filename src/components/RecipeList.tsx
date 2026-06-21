@@ -5,13 +5,14 @@ import type { RecipeSummary } from "@/types";
 
 type Props = {
   recipes: RecipeSummary[];
+  emptyMessage?: string;
 };
 
-export function RecipeList({ recipes }: Props) {
+export function RecipeList({ recipes, emptyMessage }: Props) {
   if (recipes.length === 0) {
     return (
       <div className="card text-center">
-        <p>Tidak ada resep yang cocok. Coba kurangi tag atau ganti mode pencarian.</p>
+        <p>{emptyMessage ?? "Tidak ada resep yang cocok. Coba kurangi tag atau ganti mode pencarian."}</p>
       </div>
     );
   }

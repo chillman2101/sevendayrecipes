@@ -11,10 +11,10 @@ export default function BrowsePage() {
   return (
     <div className="page-container">
       <header className="mb-8 md:mb-12">
-        <h1 className="text-2xl font-bold sm:text-3xl md:text-heading-sm">Cari resep dari bahan</h1>
+        <h1 className="text-2xl font-bold sm:text-3xl md:text-heading-sm">Cari resep</h1>
         <p className="mt-3 text-base leading-relaxed md:mt-4 md:text-body">
-          Punya ayam, bawang, dan cabai? Temukan resep yang bisa dibuat dari koleksi{" "}
-          {RECIPE_COUNT_LABEL} resep masakan Indonesia.
+          Cari dari nama menu atau dari bahan yang ada — dari koleksi {RECIPE_COUNT_LABEL} resep
+          masakan Indonesia.
         </p>
       </header>
       <BrowseClient popularTokens={popularTokens} />

@@ -72,6 +72,39 @@ export function getPopularTokens(limit = 500): string[] {
   return rows.map((r) => r.token);
 }
 
+export function searchRecipesByTitle(query: string, limit = 50): RecipeSummary[] {
+  const normalized = query.toLowerCase().trim().replace(/\s+/g, " ");
+  if (normalized.length < 2) return [];
+
+  const db = getDb();
+  const likePattern = `%${normalized}%`;
+  const prefixPattern = `${normalized}%`;
+
+  const rows = db
+    .prepare(
+      `SELECT id, title, num_ingredients, num_steps
+       FROM recipes
+       WHERE title_normalized LIKE ?
+       ORDER BY
+         CASE WHEN title_normalized LIKE ? THEN 0 ELSE 1 END,
+         LENGTH(title) ASC
+       LIMIT ?`
+    )
+    .all(likePattern, prefixPattern, limit) as Array<{
+    id: string;
+    title: string;
+    num_ingredients: number;
+    num_steps: number;
+  }>;
+
+  return rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    num_ingredients: r.num_ingredients,
+    num_steps: r.num_steps,
+  }));
+}
+
 export function searchRecipesByTags(
   tags: string[],
   matchMode: "all" | "partial" = "all",

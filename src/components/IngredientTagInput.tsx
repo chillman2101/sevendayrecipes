@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { MobileSearchInput } from "./MobileSearchInput";
 
 type Props = {
   popularTokens: string[];
@@ -39,7 +40,7 @@ export function IngredientTagInput({ popularTokens, selected, onChange }: Props)
         ))}
       </div>
 
-      <input
+      <MobileSearchInput
         type="text"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -50,7 +51,6 @@ export function IngredientTagInput({ popularTokens, selected, onChange }: Props)
           }
         }}
         placeholder="Ketik bahan: ayam, bawang putih, cabai..."
-        className="w-full border border-ink-violet bg-pure-white px-4 py-3 text-base"
       />
 
       {query && suggestions.length > 0 && (

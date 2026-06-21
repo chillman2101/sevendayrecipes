@@ -42,6 +42,8 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 5rem;
+    scroll-padding-bottom: 40vh;
   }
 
   body {
