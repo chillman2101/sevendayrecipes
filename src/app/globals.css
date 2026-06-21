@@ -41,18 +41,26 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
     @apply bg-cream-paper text-ink-violet font-roobert antialiased;
-    font-size: var(--text-body);
-    line-height: var(--leading-body);
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  @media (min-width: 768px) {
+    body {
+      font-size: var(--text-body);
+      line-height: var(--leading-body);
+    }
   }
 }
 
 @layer utilities {
   .btn-primary {
-    @apply inline-flex items-center justify-center border border-ink-violet bg-butter-yellow px-8 py-4 text-sm font-bold uppercase tracking-wide text-ink-violet transition-transform;
+    @apply inline-flex items-center justify-center border border-ink-violet bg-butter-yellow px-6 py-3 text-sm font-bold uppercase tracking-wide text-ink-violet transition-transform md:px-8 md:py-4;
     box-shadow: var(--shadow-subtle);
   }
 
@@ -62,19 +70,23 @@
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center border border-ink-violet bg-ink-violet px-5 py-2.5 text-base font-bold text-cream-paper;
+    @apply inline-flex items-center justify-center border border-ink-violet bg-ink-violet px-4 py-2 text-sm font-bold text-cream-paper md:px-5 md:py-2.5 md:text-base;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center border border-ink-violet bg-transparent px-5 py-2.5 text-base text-ink-violet;
+    @apply inline-flex items-center justify-center border border-ink-violet bg-transparent px-4 py-2 text-sm text-ink-violet md:px-5 md:py-2.5 md:text-base;
   }
 
   .card {
-    @apply border border-ink-violet bg-pure-white p-10;
+    @apply border border-ink-violet bg-pure-white p-5 sm:p-6 md:p-10;
   }
 
   .tag {
-    @apply inline-flex items-center gap-2 border border-ink-violet bg-butter-yellow px-3 py-1 text-sm font-bold;
+    @apply inline-flex items-center gap-2 border border-ink-violet bg-butter-yellow px-3 py-1 text-xs font-bold sm:text-sm;
+  }
+
+  .page-container {
+    @apply mx-auto max-w-[1200px] px-4 py-10 sm:px-6 sm:py-12 md:px-20 md:py-16 lg:py-24;
   }
 }
 

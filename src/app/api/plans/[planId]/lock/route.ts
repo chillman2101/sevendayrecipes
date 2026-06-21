@@ -7,13 +7,13 @@ export const runtime = "nodejs";
 type Props = { params: Promise<{ planId: string }> };
 
 export async function POST(request: Request, { params }: Props) {
-  const { planId } = await params;
-  const plan = getPlan(planId);
+  const { planId: rawPlanId } = await params;
+  const plan = getPlan(decodeURIComponent(rawPlanId));
   if (!plan) return NextResponse.json({ error: "Plan tidak ditemukan" }, { status: 404 });
 
   const { day, slot } = (await request.json()) as { day: number; slot: number };
-  const updated = toggleSlotLock(plan.slots, day, slot);
-  updatePlanSlots(planId, updated);
+  const updatedSlots = toggleSlotLock(plan.slots, day, slot);
+  const updatedPlan = updatePlanSlots(plan, updatedSlots);
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ id: updatedPlan.id });
 }

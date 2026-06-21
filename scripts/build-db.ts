@@ -37,7 +37,6 @@ function main() {
       db.exec(`
         DROP TABLE IF EXISTS ingredient_tokens;
         DROP TABLE IF EXISTS recipes;
-        DROP TABLE IF EXISTS plans;
       `);
     }
   } else {

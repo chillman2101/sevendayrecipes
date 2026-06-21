@@ -33,10 +33,10 @@ export async function PrintLayout({ plan, recipes }: Props) {
   const qrMap = new Map(qrEntries.map((e) => [e.key, e.dataUrl]));
 
   return (
-    <div className="print-root mx-auto max-w-[900px] bg-cream-paper p-8 text-ink-violet">
-      <header className="mb-10 border-b-2 border-ink-violet pb-6 text-center">
-        <p className="mb-2 text-sm uppercase tracking-widest">SevenDay Recipes</p>
-        <h1 className="text-4xl font-bold">Menu Minggu Ini</h1>
+    <div className="print-root mx-auto max-w-[900px] bg-cream-paper p-4 text-ink-violet sm:p-8">
+      <header className="mb-8 border-b-2 border-ink-violet pb-4 text-center sm:mb-10 sm:pb-6">
+        <p className="mb-2 text-xs uppercase tracking-widest sm:text-sm">SevenDay Recipes</p>
+        <h1 className="text-2xl font-bold sm:text-4xl">Menu Minggu Ini</h1>
         <p className="mt-2 text-base">{formatPlanDate(plan.createdAt)}</p>
       </header>
 
@@ -53,16 +53,16 @@ export async function PrintLayout({ plan, recipes }: Props) {
               return (
                 <article
                   key={`${day}-${slot.slot}`}
-                  className="flex items-center justify-between gap-4 border border-ink-violet bg-pure-white p-4"
+                  className="flex flex-col gap-3 border border-ink-violet bg-pure-white p-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                 >
-                  <div className="flex-1">
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs uppercase">Resep {slot.slot}</p>
-                    <h3 className="text-2xl font-bold leading-tight">{recipe.title}</h3>
+                    <h3 className="text-lg font-bold leading-tight sm:text-2xl">{recipe.title}</h3>
                     <p className="mt-2 text-sm">Scan QR untuk bahan & langkah</p>
                   </div>
                   {qr && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={qr} alt={`QR ${recipe.title}`} width={96} height={96} />
+                    <img src={qr} alt={`QR ${recipe.title}`} width={96} height={96} className="self-start sm:self-center" />
                   )}
                 </article>
               );

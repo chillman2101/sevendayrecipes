@@ -38,12 +38,12 @@ export function BrowseClient({ popularTokens }: Props) {
       <form onSubmit={handleSearch} className="card space-y-6">
         <IngredientTagInput popularTokens={popularTokens} selected={tags} onChange={setTags} />
 
-        <div className="flex flex-wrap gap-4">
-          <label className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-4">
+          <label className="flex items-center gap-2 text-sm md:text-base">
             <input type="radio" checked={matchMode === "all"} onChange={() => setMatchMode("all")} />
             Semua bahan cocok
           </label>
-          <label className="flex items-center gap-2">
+          <label className="flex items-center gap-2 text-sm md:text-base">
             <input
               type="radio"
               checked={matchMode === "partial"}
@@ -53,7 +53,7 @@ export function BrowseClient({ popularTokens }: Props) {
           </label>
         </div>
 
-        <Button type="submit" disabled={loading || tags.length === 0}>
+        <Button type="submit" disabled={loading || tags.length === 0} className="w-full sm:w-auto">
           {loading ? "Mencari..." : "Cari Resep"}
         </Button>
       </form>

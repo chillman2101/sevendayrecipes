@@ -1,5 +1,13 @@
 export const RECIPE_COUNT_LABEL = "60.000+";
 
+export function resolvePlanId(raw: string): string {
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
 export function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }

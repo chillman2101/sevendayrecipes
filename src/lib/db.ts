@@ -1,23 +1,31 @@
 import Database from "better-sqlite3";
+import fs from "fs";
 import path from "path";
 
 let db: Database.Database | null = null;
 
 export function getDbPath(): string {
-  return process.env.DATABASE_PATH || path.join(process.cwd(), "data", "recipes.db");
+  if (process.env.DATABASE_PATH && fs.existsSync(process.env.DATABASE_PATH)) {
+    return process.env.DATABASE_PATH;
+  }
+
+  const candidates = [
+    path.join(process.cwd(), "data", "recipes.db"),
+    path.join(process.cwd(), ".next", "server", "data", "recipes.db"),
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) return candidate;
+  }
+
+  return path.join(process.cwd(), "data", "recipes.db");
 }
 
 export function getDb(): Database.Database {
   if (!db) {
-    const dbPath = getDbPath();
-    db = new Database(dbPath, { readonly: true });
+    db = new Database(getDbPath(), { readonly: true, fileMustExist: true });
   }
   return db;
-}
-
-export function getWritableDb(): Database.Database {
-  const dbPath = getDbPath();
-  return new Database(dbPath);
 }
 
 export function initSchema(database: Database.Database): void {
@@ -41,12 +49,5 @@ export function initSchema(database: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_tokens_token ON ingredient_tokens(token);
     CREATE INDEX IF NOT EXISTS idx_tokens_recipe ON ingredient_tokens(recipe_id);
     CREATE INDEX IF NOT EXISTS idx_recipes_title ON recipes(title_normalized);
-
-    CREATE TABLE IF NOT EXISTS plans (
-      id TEXT PRIMARY KEY,
-      config TEXT NOT NULL,
-      slots TEXT NOT NULL,
-      created_at TEXT NOT NULL
-    );
   `);
 }

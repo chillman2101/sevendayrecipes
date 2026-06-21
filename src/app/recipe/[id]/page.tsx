@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getRecipeById } from "@/lib/recipes";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -12,22 +13,22 @@ export default async function RecipePage({ params }: Props) {
   if (!recipe) notFound();
 
   return (
-    <div className="mx-auto max-w-[800px] px-6 py-16 md:px-20">
-      <Link href="/" className="no-print mb-8 inline-block text-body-sm hover:underline">
+    <div className="page-container max-w-[800px]">
+      <Link href="/" className="no-print mb-6 inline-block text-sm hover:underline md:mb-8 md:text-body-sm">
         ← Kembali
       </Link>
 
-      <article className="card space-y-10">
+      <article className="card space-y-8 md:space-y-10">
         <header>
-          <h1 className="text-heading-sm font-bold">{recipe.title}</h1>
-          <p className="mt-4 text-body-sm">
+          <h1 className="text-2xl font-bold leading-snug sm:text-3xl md:text-heading-sm">{recipe.title}</h1>
+          <p className="mt-3 text-sm md:mt-4 md:text-body-sm">
             {recipe.num_ingredients} bahan · {recipe.num_steps} langkah
           </p>
         </header>
 
         <section>
-          <h2 className="mb-4 text-subheading font-bold">Bahan-bahan</h2>
-          <ul className="list-inside list-disc space-y-2">
+          <h2 className="mb-3 text-xl font-bold md:mb-4 md:text-subheading">Bahan-bahan</h2>
+          <ul className="list-inside list-disc space-y-2 text-sm md:text-base">
             {recipe.ingredients.map((item, i) => (
               <li key={i}>{item}</li>
             ))}
@@ -35,8 +36,8 @@ export default async function RecipePage({ params }: Props) {
         </section>
 
         <section>
-          <h2 className="mb-4 text-subheading font-bold">Cara membuat</h2>
-          <ol className="list-inside list-decimal space-y-4">
+          <h2 className="mb-3 text-xl font-bold md:mb-4 md:text-subheading">Cara membuat</h2>
+          <ol className="list-inside list-decimal space-y-3 text-sm md:space-y-4 md:text-base">
             {recipe.steps.map((step, i) => (
               <li key={i}>{step}</li>
             ))}

@@ -1,43 +1,18 @@
-import { nanoid } from "nanoid";
 import type { Plan, PlanConfig, PlanSlot } from "@/types";
-import { getDb, getWritableDb } from "./db";
+import { decodePlan, encodePlan, reencodePlan } from "./plan-code";
 
+/** Stateless plan storage — works on Vercel serverless (no filesystem writes). */
 export function savePlan(config: PlanConfig, slots: PlanSlot[]): Plan {
-  const id = nanoid(8);
-  const plan: Plan = {
-    id,
-    config,
-    slots,
-    createdAt: new Date().toISOString(),
-  };
-
-  const db = getWritableDb();
-  db.prepare(
-    "INSERT INTO plans (id, config, slots, created_at) VALUES (?, ?, ?, ?)"
-  ).run(id, JSON.stringify(config), JSON.stringify(slots), plan.createdAt);
-  db.close();
-
-  return plan;
+  const createdAt = new Date().toISOString();
+  const id = encodePlan(config, slots, createdAt);
+  return { id, config, slots, createdAt };
 }
 
 export function getPlan(id: string): Plan | null {
-  const db = getDb();
-  const row = db
-    .prepare("SELECT id, config, slots, created_at FROM plans WHERE id = ?")
-    .get(id) as { id: string; config: string; slots: string; created_at: string } | undefined;
-
-  if (!row) return null;
-
-  return {
-    id: row.id,
-    config: JSON.parse(row.config) as PlanConfig,
-    slots: JSON.parse(row.slots) as PlanSlot[],
-    createdAt: row.created_at,
-  };
+  return decodePlan(id);
 }
 
-export function updatePlanSlots(id: string, slots: PlanSlot[]): void {
-  const db = getWritableDb();
-  db.prepare("UPDATE plans SET slots = ? WHERE id = ?").run(JSON.stringify(slots), id);
-  db.close();
+export function updatePlanSlots(plan: Plan, slots: PlanSlot[]): Plan {
+  const id = reencodePlan(plan.config, slots, plan.createdAt);
+  return { ...plan, id, slots };
 }
