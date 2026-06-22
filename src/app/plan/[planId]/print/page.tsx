@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { PrintButton } from "@/components/PrintButton";
+import { PlanPdfActions } from "@/components/PlanPdfActions";
 import { PrintLayout } from "@/components/PrintLayout";
 import { resolvePlanId } from "@/lib/utils";
 import { getPlan } from "@/lib/plans";
@@ -20,7 +20,7 @@ export default async function PlanPrintPage({ params }: Props) {
   return (
     <div className="bg-cream-paper px-3 py-6 sm:px-4 sm:py-8">
       <div className="no-print mx-auto mb-4 max-w-[900px] text-center sm:mb-6">
-        <PrintButton />
+        <PlanPdfActions planId={plan.id} autoDownloadOnMobile />
       </div>
       <PrintLayout plan={plan} recipes={recipes} />
     </div>

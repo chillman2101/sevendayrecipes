@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import type { Plan, Recipe } from "@/types";
+import { downloadPlanPdf } from "@/lib/plan-pdf-client";
 import { DAY_LABELS } from "@/lib/utils";
+import { PageLoading } from "./PageLoading";
 import { Button } from "./ui/Button";
 
 type Props = {
@@ -19,6 +22,7 @@ function formatDayMenu(titles: string[]): string {
 
 export function PlanGrid({ plan, recipes }: Props) {
   const router = useRouter();
+  const [pdfLoading, setPdfLoading] = useState(false);
   const recipeMap = new Map(recipes.map((r) => [r.id, r]));
 
   async function mutatePlan(path: string, body: { day: number; slot: number }) {
@@ -61,11 +65,32 @@ export function PlanGrid({ plan, recipes }: Props) {
 
   const planPath = `/plan/${encodeURIComponent(plan.id)}`;
 
+  async function handleDownloadPdf() {
+    setPdfLoading(true);
+    try {
+      await downloadPlanPdf(plan.id);
+    } finally {
+      setPdfLoading(false);
+    }
+  }
+
   return (
     <div className="space-y-8 md:space-y-10">
       <div className="no-print">
-        <Button href={`/plan/${encodeURIComponent(plan.id)}/print`} variant="primary" className="w-full sm:w-auto">
-          Cetak Menu + QR
+        {pdfLoading && <PageLoading message="Menyiapkan PDF..." />}
+        <button
+          type="button"
+          className="btn-primary w-full sm:hidden"
+          onClick={() => void handleDownloadPdf()}
+        >
+          Unduh PDF
+        </button>
+        <Button
+          href={`/plan/${encodeURIComponent(plan.id)}/print`}
+          variant="primary"
+          className="hidden w-full sm:inline-flex sm:w-auto"
+        >
+          Unduh / Cetak PDF
         </Button>
       </div>
 
