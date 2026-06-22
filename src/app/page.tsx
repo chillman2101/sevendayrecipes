@@ -16,8 +16,7 @@ export default function HomePage() {
             Menu masakan mingguan, tanpa pusing
           </h1>
           <p className="text-base leading-relaxed md:text-body">
-            Punya ayam, tahu, tempe? Rencanakan menu 1–7 hari dari {RECIPE_COUNT_LABEL} resep — tiap
-            hari beberapa masakan terpisah, bukan digabung jadi satu resep.
+            Punya ayam, tahu, tempe? Rencanakan menu 1–7 hari dari {RECIPE_COUNT_LABEL} resep — tanpa pusing.
           </p>
           <p className="mt-4 inline-block border border-ink-violet bg-butter-yellow px-3 py-1.5 text-xs font-bold sm:text-sm">
             {RECIPE_COUNT_LABEL} resep tersedia

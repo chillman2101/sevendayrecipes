@@ -37,6 +37,7 @@ function main() {
       db.exec(`
         DROP TABLE IF EXISTS ingredient_tokens;
         DROP TABLE IF EXISTS recipes;
+        DROP TABLE IF EXISTS popular_tokens;
       `);
     }
   } else {
@@ -44,6 +45,8 @@ function main() {
   }
 
   initSchema(db);
+
+  db.exec("ANALYZE");
 
   const insertRecipe = db.prepare(`
     INSERT INTO recipes (id, title, title_normalized, ingredients, steps, num_ingredients, num_steps)
@@ -75,6 +78,15 @@ function main() {
 
   console.log("Building database...");
   tx(recipes);
+
+  console.log("Caching popular tokens...");
+  db.exec(`
+    DELETE FROM popular_tokens;
+    INSERT INTO popular_tokens (token, cnt)
+    SELECT token, COUNT(*) as cnt FROM ingredient_tokens
+    GROUP BY token ORDER BY cnt DESC LIMIT 500;
+  `);
+  db.exec("ANALYZE");
 
   const tokenCount = db.prepare("SELECT COUNT(*) as c FROM ingredient_tokens").get() as { c: number };
   console.log(`Done. ${recipes.length} recipes, ${tokenCount.c} tokens`);

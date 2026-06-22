@@ -59,6 +59,8 @@ export function PlanGrid({ plan, recipes }: Props) {
     };
   });
 
+  const planPath = `/plan/${encodeURIComponent(plan.id)}`;
+
   return (
     <div className="space-y-8 md:space-y-10">
       <div className="no-print">
@@ -88,7 +90,10 @@ export function PlanGrid({ plan, recipes }: Props) {
                     {slot.pantryTag && <span className="tag text-xs">Pakai: {slot.pantryTag}</span>}
                   </div>
                   <h3 className="mb-3 text-lg font-bold leading-snug md:mb-4 md:text-xl">
-                    <Link href={`/recipe/${recipe.id}`} className="hover:underline">
+                    <Link
+                      href={`/recipe/${recipe.id}?from=${encodeURIComponent(planPath)}`}
+                      className="hover:underline"
+                    >
                       {recipe.title}
                     </Link>
                   </h3>

@@ -24,6 +24,8 @@ export function getDbPath(): string {
 export function getDb(): Database.Database {
   if (!db) {
     db = new Database(getDbPath(), { readonly: true, fileMustExist: true });
+    db.pragma("cache_size = -64000");
+    db.pragma("temp_store = memory");
   }
   return db;
 }
@@ -49,5 +51,10 @@ export function initSchema(database: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_tokens_token ON ingredient_tokens(token);
     CREATE INDEX IF NOT EXISTS idx_tokens_recipe ON ingredient_tokens(recipe_id);
     CREATE INDEX IF NOT EXISTS idx_recipes_title ON recipes(title_normalized);
+
+    CREATE TABLE IF NOT EXISTS popular_tokens (
+      token TEXT PRIMARY KEY,
+      cnt INTEGER NOT NULL
+    );
   `);
 }

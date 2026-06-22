@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { RecipeBackLink } from "@/components/RecipeBackLink";
 import { getRecipeById } from "@/lib/recipes";
 
 export const runtime = "nodejs";
@@ -14,9 +14,7 @@ export default async function RecipePage({ params }: Props) {
 
   return (
     <div className="page-container max-w-[800px]">
-      <Link href="/" className="no-print mb-6 inline-block text-sm hover:underline md:mb-8 md:text-body-sm">
-        ← Kembali
-      </Link>
+      <RecipeBackLink />
 
       <article className="card space-y-8 md:space-y-10">
         <header>

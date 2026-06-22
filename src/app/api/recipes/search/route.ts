@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { searchRecipesByTags, searchRecipesByTitle } from "@/lib/recipes";
 
 export const runtime = "nodejs";
+export const maxDuration = 30;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

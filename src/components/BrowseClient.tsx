@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { PageLoading } from "./PageLoading";
 import { IngredientTagInput } from "./IngredientTagInput";
 import { MobileSearchInput } from "./MobileSearchInput";
 import { RecipeList } from "./RecipeList";
@@ -74,6 +75,7 @@ export function BrowseClient({ popularTokens }: Props) {
 
   return (
     <div className="space-y-8 md:space-y-10">
+      {loading && <PageLoading message="Mencari resep..." />}
       <div className="flex flex-wrap gap-2">
         <button type="button" className={tabClass(mode === "ingredients")} onClick={() => setMode("ingredients")}>
           Cari by Bahan
@@ -112,7 +114,7 @@ export function BrowseClient({ popularTokens }: Props) {
         )}
 
         <Button type="submit" disabled={loading || !canSearch} className="w-full sm:w-auto">
-          {loading ? "Mencari..." : "Cari Resep"}
+          Cari Resep
         </Button>
       </form>
 
@@ -121,7 +123,7 @@ export function BrowseClient({ popularTokens }: Props) {
           {groupedByTag.map(([tag, items]) => (
             <section key={tag} className="space-y-4">
               <h2 className="text-xl font-bold md:text-subheading">Resep {tag}</h2>
-              <RecipeList recipes={items} groupByTag={false} />
+              <RecipeList recipes={items} returnTo="/browse" />
             </section>
           ))}
         </div>
@@ -129,6 +131,7 @@ export function BrowseClient({ popularTokens }: Props) {
         searched && (
           <RecipeList
             recipes={recipes}
+            returnTo="/browse"
             emptyMessage={
               mode === "name"
                 ? "Tidak ada resep dengan nama itu."

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useKeyboardPadding } from "@/hooks/useMobileInputFocus";
+import { PageLoading } from "./PageLoading";
 import { IngredientTagInput } from "./IngredientTagInput";
 import { Button } from "./ui/Button";
 
@@ -36,9 +37,9 @@ export function GeneratorForm({ popularTokens }: Props) {
     });
 
     const data = await res.json();
-    setLoading(false);
 
     if (!res.ok) {
+      setLoading(false);
       setError(data.error || "Gagal generate menu");
       return;
     }
@@ -47,7 +48,9 @@ export function GeneratorForm({ popularTokens }: Props) {
   }
 
   return (
-    <form
+    <>
+      {loading && <PageLoading message="Menyusun menu mingguan Anda..." />}
+      <form
       onSubmit={handleSubmit}
       className="card space-y-8 md:space-y-10"
       style={{ paddingBottom: keyboardPadding > 0 ? keyboardPadding : undefined }}
@@ -95,8 +98,9 @@ export function GeneratorForm({ popularTokens }: Props) {
       {error && <p className="text-sm text-red-700 md:text-base">{error}</p>}
 
       <Button type="submit" disabled={loading} className="w-full sm:w-auto">
-        {loading ? "Generating..." : "Generate Menu"}
+        Generate Menu
       </Button>
     </form>
+    </>
   );
 }

@@ -6,10 +6,10 @@ import type { RecipeSummary } from "@/types";
 type Props = {
   recipes: RecipeSummary[];
   emptyMessage?: string;
-  groupByTag?: boolean;
+  returnTo?: string;
 };
 
-export function RecipeList({ recipes, emptyMessage }: Props) {
+export function RecipeList({ recipes, emptyMessage, returnTo }: Props) {
   if (recipes.length === 0) {
     return (
       <div className="card text-center">
@@ -23,7 +23,11 @@ export function RecipeList({ recipes, emptyMessage }: Props) {
       {recipes.map((recipe) => (
         <Link
           key={recipe.id}
-          href={`/recipe/${recipe.id}`}
+          href={
+            returnTo
+              ? `/recipe/${recipe.id}?from=${encodeURIComponent(returnTo)}`
+              : `/recipe/${recipe.id}?from=${encodeURIComponent("/browse")}`
+          }
           className="card block transition-transform hover:-translate-y-0.5"
         >
           <h3 className="mb-2 text-xl font-bold">{recipe.title}</h3>

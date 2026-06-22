@@ -1,10 +1,12 @@
 import type { PlanConfig, PlanSlot, Recipe, RecipeSummary } from "@/types";
 import { getDb } from "./db";
 import {
+  clearPoolCache,
   inferPrimaryPantryTag,
   normalizePantryTags,
   pickRandomRecipeUnfiltered,
   pickRecipeForPantryTag,
+  preloadPantryPools,
   rotatePantryTags,
 } from "./pantry";
 
@@ -69,6 +71,15 @@ export function getRecipesByIds(ids: string[]): Recipe[] {
 
 export function getPopularTokens(limit = 500): string[] {
   const db = getDb();
+  try {
+    const rows = db
+      .prepare("SELECT token FROM popular_tokens ORDER BY cnt DESC LIMIT ?")
+      .all(limit) as Array<{ token: string }>;
+    if (rows.length > 0) return rows.map((r) => r.token);
+  } catch {
+    // fallback if popular_tokens not built yet
+  }
+
   const rows = db
     .prepare(
       `SELECT token, COUNT(*) as cnt FROM ingredient_tokens
@@ -116,55 +127,73 @@ export function searchRecipesByTags(tags: string[], limit = 50): RecipeSummary[]
   if (normalized.length === 0) return [];
 
   const db = getDb();
-  const placeholders = normalized.map(() => "?").join(",");
+  const perTagLimit = Math.max(20, Math.ceil(limit / normalized.length) + 5);
+  const seen = new Set<string>();
+  const results: RecipeSummary[] = [];
 
-  const rows = db
-    .prepare(
-      `SELECT r.id, r.title, r.title_normalized, r.num_ingredients, r.num_steps,
-              GROUP_CONCAT(DISTINCT it.token) as matched_tokens,
-              COUNT(DISTINCT it.token) as match_count
-       FROM recipes r
-       JOIN ingredient_tokens it ON r.id = it.recipe_id
-       WHERE it.token IN (${placeholders})
-       GROUP BY r.id
-       HAVING match_count >= 1
-       ORDER BY match_count ASC, RANDOM()
-       LIMIT ?`
-    )
-    .all(...normalized, limit) as Array<{
-    id: string;
-    title: string;
-    title_normalized: string;
-    num_ingredients: number;
-    num_steps: number;
-    matched_tokens: string;
-    match_count: number;
-  }>;
+  const idStmt = db.prepare(
+    "SELECT recipe_id FROM ingredient_tokens WHERE token = ? LIMIT ?"
+  );
 
-  return rows.map((r) => {
-    const matchedPantryTags = r.matched_tokens.split(",").filter(Boolean);
-    return {
-      id: r.id,
-      title: r.title,
-      num_ingredients: r.num_ingredients,
-      num_steps: r.num_steps,
-      matchedPantryTags,
-      primaryPantryTag: inferPrimaryPantryTag(r.title_normalized, matchedPantryTags),
-    };
-  });
+  for (const tag of normalized) {
+    const idRows = idStmt.all(tag, perTagLimit * 2) as Array<{ recipe_id: string }>;
+    const ids = [...new Set(idRows.map((r) => r.recipe_id))].slice(0, perTagLimit);
+
+    if (ids.length === 0) continue;
+
+    const placeholders = ids.map(() => "?").join(",");
+    const rows = db
+      .prepare(
+        `SELECT id, title, title_normalized, num_ingredients, num_steps
+         FROM recipes WHERE id IN (${placeholders})`
+      )
+      .all(...ids) as Array<{
+      id: string;
+      title: string;
+      title_normalized: string;
+      num_ingredients: number;
+      num_steps: number;
+    }>;
+
+    const ordered = [
+      ...rows.filter((r) => r.title_normalized.includes(tag)),
+      ...rows.filter((r) => !r.title_normalized.includes(tag)),
+    ];
+
+    for (const r of ordered) {
+      if (seen.has(r.id)) continue;
+      seen.add(r.id);
+
+      results.push({
+        id: r.id,
+        title: r.title,
+        num_ingredients: r.num_ingredients,
+        num_steps: r.num_steps,
+        matchedPantryTags: [tag],
+        primaryPantryTag: inferPrimaryPantryTag(r.title_normalized, [tag]),
+      });
+
+      if (results.length >= limit) return results;
+    }
+  }
+
+  return results;
 }
 
 function getUsedTitles(slots: PlanSlot[], skipDay?: number, skipSlot?: number): Set<string> {
+  const ids = slots
+    .filter((s) => !(s.day === skipDay && s.slot === skipSlot))
+    .map((s) => s.recipeId);
+
+  if (ids.length === 0) return new Set();
+
   const db = getDb();
-  const titles = new Set<string>();
-  for (const s of slots) {
-    if (s.day === skipDay && s.slot === skipSlot) continue;
-    const row = db
-      .prepare("SELECT title_normalized FROM recipes WHERE id = ?")
-      .get(s.recipeId) as { title_normalized: string } | undefined;
-    if (row) titles.add(row.title_normalized);
-  }
-  return titles;
+  const placeholders = ids.map(() => "?").join(",");
+  const rows = db
+    .prepare(`SELECT title_normalized FROM recipes WHERE id IN (${placeholders})`)
+    .all(...ids) as Array<{ title_normalized: string }>;
+
+  return new Set(rows.map((r) => r.title_normalized));
 }
 
 export function generatePlanSlots(config: PlanConfig): PlanSlot[] {
@@ -174,33 +203,34 @@ export function generatePlanSlots(config: PlanConfig): PlanSlot[] {
   const slots: PlanSlot[] = [];
   const totalNeeded = config.days * config.recipesPerDay;
 
-  for (let day = 1; day <= config.days; day++) {
-    const rotation = pantryTags.length > 0 ? rotatePantryTags(pantryTags, day) : [];
-
-    for (let slot = 1; slot <= config.recipesPerDay; slot++) {
-      let recipeId: string | null = null;
-      let pantryTag: string | undefined;
-
-      if (pantryTags.length > 0) {
-        pantryTag = rotation[(slot - 1) % rotation.length];
-        const picked = pickRecipeForPantryTag(pantryTag, usedIds, usedTitles);
-        recipeId = picked?.id ?? null;
-      } else {
-        const picked = pickRandomRecipeUnfiltered(usedIds, usedTitles);
-        recipeId = picked?.id ?? null;
-      }
-
-      if (!recipeId) break;
-
-      const db = getDb();
-      const row = db
-        .prepare("SELECT title_normalized FROM recipes WHERE id = ?")
-        .get(recipeId) as { title_normalized: string };
-
-      usedIds.add(recipeId);
-      usedTitles.add(row.title_normalized);
-      slots.push({ day, slot, recipeId, pantryTag });
+  try {
+    if (pantryTags.length > 0) {
+      preloadPantryPools(pantryTags);
     }
+
+    for (let day = 1; day <= config.days; day++) {
+      const rotation = pantryTags.length > 0 ? rotatePantryTags(pantryTags, day) : [];
+
+      for (let slot = 1; slot <= config.recipesPerDay; slot++) {
+        let picked = null;
+        let pantryTag: string | undefined;
+
+        if (pantryTags.length > 0) {
+          pantryTag = rotation[(slot - 1) % rotation.length];
+          picked = pickRecipeForPantryTag(pantryTag, usedIds, usedTitles);
+        } else {
+          picked = pickRandomRecipeUnfiltered(usedIds, usedTitles);
+        }
+
+        if (!picked) break;
+
+        usedIds.add(picked.id);
+        usedTitles.add(picked.title_normalized);
+        slots.push({ day, slot, recipeId: picked.id, pantryTag });
+      }
+    }
+  } finally {
+    clearPoolCache();
   }
 
   return slots.length === totalNeeded ? slots : slots;
@@ -220,21 +250,23 @@ export function swapSlot(
   );
   const usedTitles = getUsedTitles(currentSlots, day, slot);
 
-  let newId: string | null = null;
+  try {
+    if (target.pantryTag) {
+      preloadPantryPools([target.pantryTag]);
+    }
 
-  if (target.pantryTag) {
-    const picked = pickRecipeForPantryTag(target.pantryTag, usedIds, usedTitles);
-    newId = picked?.id ?? null;
-  } else {
-    const picked = pickRandomRecipeUnfiltered(usedIds, usedTitles);
-    newId = picked?.id ?? null;
+    const picked = target.pantryTag
+      ? pickRecipeForPantryTag(target.pantryTag, usedIds, usedTitles)
+      : pickRandomRecipeUnfiltered(usedIds, usedTitles);
+
+    if (!picked) return currentSlots;
+
+    return currentSlots.map((s) =>
+      s.day === day && s.slot === slot ? { ...s, recipeId: picked.id } : s
+    );
+  } finally {
+    clearPoolCache();
   }
-
-  if (!newId) return currentSlots;
-
-  return currentSlots.map((s) =>
-    s.day === day && s.slot === slot ? { ...s, recipeId: newId } : s
-  );
 }
 
 export function toggleSlotLock(
